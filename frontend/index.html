@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SHL Assessment Recommender</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: url("https://images.unsplash.com/photo-1518770660439-4636190af475")
+                        no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+        }
+
+        /* DARK OVERLAY FOR READABILITY */
+        .overlay {
+            background: rgba(0, 0, 0, 0.75);
+            min-height: 100vh;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color:goldenrod;
+            font-size: 48px;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-style: italic;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.8);
+        }
+
+        /* GLASS SEARCH BOX */
+        .search-box {
+            display: inline-flex;
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(10px);
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+        }
+
+        input {
+            width: 360px;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        button {
+            padding: 12px 20px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #0072ff, #00c6ff);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        /* CARD CONTAINER */
+        #results {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 25px;
+            padding-top: 10px;
+        }
+
+        /* CARD STYLE */
+        .card {
+            width: 270px;
+            height: 250px;
+            border-radius: 18px;
+            overflow: hidden;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.6);
+            transition: transform 0.35s, box-shadow 0.35s;
+        }
+
+        .card:hover {
+            transform: translateY(-12px) scale(1.04);
+            box-shadow: 0 18px 55px rgba(0,0,0,0.9);
+        }
+
+        /* CARD OVERLAY */
+        .card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to top,
+                rgba(0,0,0,0.85),
+                rgba(0,0,0,0.3)
+            );
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            text-align: left;
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #00e0ff;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+        }
+
+        .title a {
+            color: #00e0ff;
+            text-decoration: none;
+        }
+
+        .title a:hover {
+            text-decoration: underline;
+        }
+
+        .info {
+            font-size: 13px;
+            color: #f0f0f0;
+            line-height: 1.5;
+        }
+
+        .loading {
+            font-size: 18px;
+            margin-top: 15px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="overlay">
+
+    <h1>SHL Assessment Recommender</h1>
+
+    <div class="search-box">
+        <input type="text" id="query" placeholder="Enter job role or skills">
+        <button onclick="getResults()">Recommend</button>
+    </div>
+
+    <div id="loading" class="loading"></div>
+    <div id="results"></div>
+
+</div>
+
+<script>
+
+const images = [
+ "https://images.unsplash.com/photo-1518770660439-4636190af475",
+ "https://images.unsplash.com/photo-1498050108023-c5249f4df085",
+ "https://images.unsplash.com/photo-1504384308090-c894fdcc538d",
+ "https://images.unsplash.com/photo-1515879218367-8466d910aaa4",
+ "https://images.unsplash.com/photo-1555066931-4365d14bab8c"
+];
+
+async function getResults() {
+
+    const query = document.getElementById("query").value;
+    if (!query) return;
+
+    document.getElementById("loading").innerText = "Loading...";
+    document.getElementById("results").innerHTML = "";
+
+    const response = await fetch("http://127.0.0.1:8000/recommend", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({query})
+    });
+
+    const data = await response.json();
+
+    document.getElementById("loading").innerText = "";
+
+    const container = document.getElementById("results");
+
+    data.recommended_assessments.forEach((item, index) => {
+
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.style.backgroundImage =
+            `url(${images[index % images.length]})`;
+
+        card.innerHTML = `
+            <div class="card-overlay">
+                <div class="title">
+                    <a href="${item.url}" target="_blank">${item.name}</a>
+                </div>
+                <div class="info">
+                    Duration: ${item.duration} min<br>
+                    Remote: ${item.remote_support}<br>
+                    Type: ${item.test_type.join(", ")}
+                </div>
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+}
+
+</script>
+
+</body>
+</html>
